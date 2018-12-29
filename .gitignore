@@ -1,0 +1,5 @@
+worldcup/status
+worldcup/cache/*.json
+worldcup/log/*.log
+worldcup/api-token
+

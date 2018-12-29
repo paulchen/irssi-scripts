@@ -427,7 +427,7 @@ sub fut {
 				if($difference =~ m/remaining/i ) {
 					$server->command("msg $channel $difference.");
 				}
-#				open my $file, '/home/ircbot/worldcup/status';
+#				open my $file, '/home/ircbot/irssi-scripts/worldcup/status';
 #				while(my $line = <$file>) {
 #					$server->command("msg $channel $line");
 #				}
