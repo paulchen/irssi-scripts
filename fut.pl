@@ -7,6 +7,8 @@ use URI::Escape;
 use Data::Dumper;
 use JSON;
 use Text::Iconv;
+use HTML::Entities;
+use Encode qw(decode);
 require HTTP::Request;
 require LWP::UserAgent;
 
@@ -60,6 +62,21 @@ sub resultcount {
 
 			return $result;
 		}
+	}
+
+	return;
+}
+
+sub slogan {
+	my $query_string = shift;
+	my $query_url = 'http://www.sloganizer.net/outbound.php?slogan=' . uri_escape($query_string);
+
+	my $user_agent = LWP::UserAgent->new;
+	my $response = $user_agent -> get( $query_url );
+	if( $response -> is_success ){
+		my $result = decode_entities(decode('utf-8', $response->decoded_content));
+		$result =~ s/<[^>]*>//g;
+		return $result;
 	}
 
 	return;
@@ -363,6 +380,14 @@ sub fut {
 						$result = $parts[0] . ' beats ' . $parts[1] . " ($count1 vs. $count2 results).";
 					}
 
+					limiter($server, "msg $channel $result");
+				}
+			}
+			elsif ($msg =~ m/!slogan\s*(.*)/i) {
+				my @parts = split(' ', $msg);
+				my $subject = $parts[1];
+				my $result = slogan($subject);
+				if ($result) {
 					limiter($server, "msg $channel $result");
 				}
 			}
