@@ -42,6 +42,7 @@ our @limit_queue;
 our $insults;
 
 our $iconv = Text::Iconv->new('utf8', 'iso8859-15');
+our $iconv2 = Text::Iconv->new('iso8859-15', 'utf8');
 
 sub resultcount {
 	# kudos to emptyvi for rewriting this code
@@ -69,12 +70,12 @@ sub resultcount {
 
 sub slogan {
 	my $query_string = shift;
-	my $query_url = 'http://www.sloganizer.net/outbound.php?slogan=' . uri_escape($query_string);
+	my $query_url = 'http://www.sloganizer.net/outbound.php?slogan=' . $iconv2->convert($query_string);
 
 	my $user_agent = LWP::UserAgent->new;
 	my $response = $user_agent -> get( $query_url );
 	if( $response -> is_success ){
-		my $result = decode_entities(decode('utf-8', $response->decoded_content));
+		my $result = decode_entities(decode_entities(decode('utf-8', $response->decoded_content)));
 		$result =~ s/<[^>]*>//g;
 		return $result;
 	}
