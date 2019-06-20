@@ -385,9 +385,7 @@ sub fut {
 				}
 			}
 			elsif ($msg =~ m/!slogan\s*(.*)/i) {
-				my @parts = split(' ', $msg);
-				my $subject = $parts[1];
-				my $result = slogan($subject);
+				my $result = slogan($1);
 				if ($result) {
 					limiter($server, "msg $channel $result");
 				}
