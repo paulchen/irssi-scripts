@@ -437,7 +437,7 @@ sub fut {
 				my $difference = calculate_date_diff(2016, 11, 19, 11, 51, 29);
 				$difference =~ s/ elapsed//;
 				if($difference ne '') {
-					$server->command("msg $channel enri owes us pizza since $difference.");
+					$server->command("msg $channel enri owes us pizza for $difference.");
 				}
 			}
 			elsif ($msg =~ m/^\s*!wm\s*$/i ) {
