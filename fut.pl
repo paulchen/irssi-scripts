@@ -161,7 +161,7 @@ sub build_match_string {
 	my ($input)=@_;
 	my $output='';
 	for(my $a=0;$a<length($input);$a++) {
-		$output.='['.lc(substr($input,$a,1)).uc(substr($input,$a,1)).']+';
+		$output .= substr($input,$a,1) . '+';
 	}
 	return $output;
 }
@@ -927,11 +927,11 @@ sub fut {
 			my $modified=0;
 			foreach my $word (@trigger_words) {
 				my $match_string = build_match_string($word);
-				if ($msg =~ m/$match_string/ ) {
+				if ($msg =~ m/$match_string/i ) {
 					my $cnt=0;
-					while($msg =~ m/$match_string/ ) {
+					while($msg =~ m/$match_string/i ) {
 						$cnt++;
-						$msg =~ s/$match_string//;
+						$msg =~ s/$match_string//i;
 					}
 					$counter{$word}{lc($nick_asks)} += $cnt;
 					$counter{$word}{$channel} += $cnt;
