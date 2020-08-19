@@ -146,6 +146,7 @@ sub get_stats {
 			last;
 		}
 
+		$key =~ s/(.)/$1\x{2060}/g;
 		if($cnt==1) {
 			$message.="$key ($value)";
 		}
