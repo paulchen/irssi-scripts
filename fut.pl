@@ -23,7 +23,7 @@ $VERSION = "1.03";
 
 # === EDIT THE FOLLOWING LINES TO YOUR NEEDS ===
 
-our $dl_url = 'http://www.rueckgr.at/~paulchen/fut.pl';
+our $dl_url = 'https://github.com/paulchen/irssi-scripts/blob/master/fut.pl';
 
 my $fut_listen_channels = '#chatbox';
 my $fut_trigger_channels = '#chatbox';
