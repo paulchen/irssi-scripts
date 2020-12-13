@@ -215,8 +215,7 @@ sub random_nick {
 sub own_nick {
 	my ($server) = @_;
 
-	my $nick = $server->{'userhost'};
-	return substr($nick,0,index($nick,'@'));
+	return $server->{'nick'};
 }
 
 sub greater0 {
@@ -414,7 +413,7 @@ sub fut {
 				limiter($server, "msg $channel $geil_nick ist zu $geil% geil");
 			}
 			elsif ($msg eq '!help') {
-				$server->command("notice $nick_asks This is your favourite ".own_nick($server)."bot.");
+				$server->command("notice $nick_asks This is your favourite ".own_nick($server).".");
 				my $line = "Currently implemented commands: !<term>stats, !<term>count, !<term>counter, !seen, !insult, !ubszkt, !deepbstats, !xazstats, !insultstats, !newyear, !oldyear, !geil";
 				foreach my $answer (@simple_answers) {
 					my @pair=split('#',$answer);
