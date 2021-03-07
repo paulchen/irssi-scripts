@@ -349,7 +349,7 @@ sub fut {
 	unless ($server->{chatnet} eq $fut_network) {
 		return;
 	}
-	if ($nick_asks =~ m/peszi/ or $nick_asks =~ m/gst/ or $nick_asks =~ m/mdk/ or $nick_asks =~ m/cobBot/ or $nick_asks =~ m/saubot/ ) {
+	if ($nick_asks =~ m/peszi/ or $nick_asks =~ m/bot$/i ) {
 		return;
 	}
 	chomp $msg;
