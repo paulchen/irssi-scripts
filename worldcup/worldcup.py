@@ -41,18 +41,18 @@ else:
     else:
         json_data = open(data_file).read()
         j = json.loads(json_data)
-        fixtures = [f for f in j['fixtures'] if dateutil.parser.parse(f['date']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
-        logger.debug('%s games in future or less than one hour in the past', len(fixtures))
-        if len(fixtures) > 0:
-            sorted_fixtures = sorted(fixtures, key=lambda f: f['date'])
-            next_game_date = dateutil.parser.parse(sorted_fixtures[0]['date']).astimezone(tz=None).replace(tzinfo=None)
+        matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
+        logger.debug('%s games in future or less than one hour in the past', len(matches))
+        if len(matches) > 0:
+            sorted_matches = sorted(matches, key=lambda m: m['utcDate'])
+            next_game_date = dateutil.parser.parse(sorted_matches[0]['utcDate']).astimezone(tz=None).replace(tzinfo=None)
             logger.debug('Next game: %s, now: %s', next_game_date, now)
             if next_game_date < now + datetime.timedelta(minutes=5):
                 logger.debug('Next game less than 5 minutes in the future or less than one hour in the past')
                 download = True
 
         if not download:
-            in_play = [f for f in j['fixtures'] if f['status'] == 'IN_PLAY']
+            in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
             logger.debug('%s games currently in play', len(in_play))
             if len(in_play) > 0:
                 download = True
@@ -60,10 +60,10 @@ else:
     
 if download:
     logger.debug('Downloading data now')
-    url = 'http://api.football-data.org/v1/competitions/467/fixtures';
-    data_file = cache_dir + '/fixtures-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
+    url = 'http://api.football-data.org/v2/competitions/2018/matches';
+    data_file = cache_dir + '/matches-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
 
-    response = requests.get(url=url, headers={'X-Auth-Token': api_token})
+    response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
 
     logger.debug('Request headers: %s', response.request.headers)
     logger.debug('Response headers: %s', response.headers)
@@ -129,7 +129,8 @@ def simple_result(result):
     return str(result['goalsHomeTeam']) + ":" + str(result['goalsAwayTeam'])
 
 
-def format_result(result):
+def format_score(result):
+    return 'wtf'
     if result['goalsHomeTeam'] == None or result['goalsAwayTeam'] == None:
         return None
 
@@ -152,15 +153,15 @@ def format_result(result):
 def format_team(team):
     if team == '':
         return '?'
-    if team in team_names:
-        return team_names[team]
-    return team
+    if team['name'] in team_names:
+        return team_names[team['name']]
+    return team['name']
 
 
 def format_game(game):
-    date = format_date(game['date'])
-    teams = format_team(game['homeTeamName']) + "-" + format_team(game['awayTeamName'])
-    result = format_result(game['result'])
+    date = format_date(game['utcDate'])
+    teams = format_team(game['homeTeam']) + "-" + format_team(game['awayTeam'])
+    result = format_score(game['score'])
     if result != None:
         return date + ": " + teams + " " + result
 
@@ -179,11 +180,11 @@ json_data = open(data_file).read()
 
 j = json.loads(json_data)
 
-sorted_fixtures = sorted(j['fixtures'], key=lambda f: f['date'])
+sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
-completed = [f for f in sorted_fixtures if f['status'] == 'FINISHED'][-3:]
-in_play = [f for f in sorted_fixtures if f['status'] == 'IN_PLAY']
-future = [f for f in sorted_fixtures if f['status'] not in ('FINISHED', 'IN_PLAY')][:3]
+completed = [m for m in sorted_matches if m['status'] == 'FINISHED'][-3:]
+in_play = [m for m in sorted_matches if m['status'] == 'IN_PLAY']
+future = [m for m in sorted_matches if m['status'] not in ('FINISHED', 'IN_PLAY')][:3]
 
 output = []
 output += [process_games('Vergangene Spiele', completed)]
