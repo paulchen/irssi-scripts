@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# vim:ts=4:sw=4:expandtab
+
 import json, dateutil.parser, os, glob, requests, datetime, pytz, tzlocal, logging, sys
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -22,66 +24,80 @@ if api_token is None:
     logger.error('API token cannot be read from file "api-token"')
     sys.exit(1)
 
-list_of_files = glob.glob(cache_dir + '/*')
-download = False
-if len(list_of_files) == 0:
-    logger.debug('No cached files')
-    download = True
-else:
-    data_file = max(list_of_files, key=os.path.getctime)
-    logger.debug('Newest cached file: %s', data_file)
 
-    now = datetime.datetime.now()
-    one_hour_ago = now - datetime.timedelta(hours=1)
-    file_date = datetime.datetime.fromtimestamp(os.path.getmtime(data_file))
+def get_data_file(prefix, url, expiration, force_download=False):
+    list_of_files = glob.glob(cache_dir + '/'  + prefix + '-*')
+    download = force_download
 
-    if file_date < one_hour_ago:
-        logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
+    # TODO simplify this
+    if len(list_of_files) == 0:
+        logger.debug('No cached files')
         download = True
     else:
-        json_data = open(data_file).read()
-        j = json.loads(json_data)
-        matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
-        logger.debug('%s games in future or less than one hour in the past', len(matches))
-        if len(matches) > 0:
-            sorted_matches = sorted(matches, key=lambda m: m['utcDate'])
-            next_game_date = dateutil.parser.parse(sorted_matches[0]['utcDate']).astimezone(tz=None).replace(tzinfo=None)
-            logger.debug('Next game: %s, now: %s', next_game_date, now)
-            if next_game_date < now + datetime.timedelta(minutes=5):
-                logger.debug('Next game less than 5 minutes in the future or less than one hour in the past')
-                download = True
+        data_file = max(list_of_files, key=os.path.getctime)
+        logger.debug('Newest cached file: %s', data_file)
 
-        if not download:
-            in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
-            logger.debug('%s games currently in play', len(in_play))
-            if len(in_play) > 0:
-                download = True
+        file_date = datetime.datetime.fromtimestamp(os.path.getmtime(data_file))
 
-    
-if download:
-    logger.debug('Downloading data now')
-    url = 'http://api.football-data.org/v2/competitions/2018/matches';
-    data_file = cache_dir + '/matches-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
+        if file_date < one_hour_ago:
+            logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
+            download = True
+        else:
+            return data_file
+        
+    if download:
+        logger.debug('Downloading data now')
+        data_file = cache_dir + '/' + prefix + '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
 
-    response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
+        response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
 
-    logger.debug('Request headers: %s', response.request.headers)
-    logger.debug('Response headers: %s', response.headers)
-    logger.debug('Status: %s', response.status_code)
+        logger.debug('Request headers: %s', response.request.headers)
+        logger.debug('Response headers: %s', response.headers)
+        logger.debug('Status: %s', response.status_code)
 
-    if response.status_code != 200:
-        logger.debug('Invalid status code')
-        sys.exit(1)
+        if response.status_code != 200:
+            logger.debug('Invalid status code')
+            sys.exit(1)
 
-    if response.headers['Content-Type'] != 'application/json;charset=UTF-8':
-        logger.debug('Invalid content type: %s', response.headers['Content-Type'])
-        sys.exit(1)
+        if response.headers['Content-Type'] != 'application/json;charset=UTF-8':
+            logger.debug('Invalid content type: %s', response.headers['Content-Type'])
+            sys.exit(1)
 
-    with open(data_file, 'w') as f:
-        f.write(response.text)
+        with open(data_file, 'w') as f:
+            f.write(response.text)
 
-else:
-    logger.debug('Not downloading anything')
+    else:
+        logger.debug('Not downloading anything')
+
+    return data_file
+
+
+now = datetime.datetime.now()
+one_hour_ago = now - datetime.timedelta(hours=1)
+match_file = get_data_file(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago)
+
+# TODO avoid redownload
+json_data = open(match_file).read()
+j = json.loads(json_data)
+matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
+logger.debug('%s games in future or less than one hour in the past', len(matches))
+redownload = False
+if len(matches) > 0:
+    sorted_matches = sorted(matches, key=lambda m: m['utcDate'])
+    next_game_date = dateutil.parser.parse(sorted_matches[0]['utcDate']).astimezone(tz=None).replace(tzinfo=None)
+    logger.debug('Next game: %s, now: %s', next_game_date, now)
+    if next_game_date < now + datetime.timedelta(minutes=5):
+        logger.debug('Next game less than 5 minutes in the future or less than one hour in the past')
+        redownload = True
+
+    if not redownload:
+        in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
+        logger.debug('%s games currently in play', len(in_play))
+        if len(in_play) > 0:
+            redownload = True
+
+    if redownload:
+	    match_file = get_data_file(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
 
 team_names = {
         'Russia': 'RUS',
@@ -175,8 +191,8 @@ def process_games(title, games):
     return title + ": " + "; ".join(map(format_game, games))
 
 
-logger.debug('Using data file %s', data_file)
-json_data = open(data_file).read()
+logger.debug('Using data file %s', match_file)
+json_data = open(match_file).read()
 
 j = json.loads(json_data)
 
