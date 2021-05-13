@@ -25,9 +25,11 @@ if api_token is None:
     sys.exit(1)
 
 
-def parse_json(data_file):
+def parse_json(data_file, downloaded=False):
     json_data = open(data_file).read()
-    return json.loads(json_data)
+    j = json.loads(json_data)
+    j['downloaded'] = downloaded
+    return j
 
 
 def get_data(prefix, url, expiration, force_download=False):
@@ -65,33 +67,33 @@ def get_data(prefix, url, expiration, force_download=False):
     with open(data_file, 'w') as f:
         f.write(response.text)
 
-    return parse_json(data_file)
+    return parse_json(data_file, True)
 
 
 now = datetime.datetime.now()
 one_hour_ago = now - datetime.timedelta(hours=1)
 j = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago)
 
-# TODO avoid redownload
-matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
-logger.debug('%s games in future or less than one hour in the past', len(matches))
-redownload = False
-if len(matches) > 0:
-    sorted_matches = sorted(matches, key=lambda m: m['utcDate'])
-    next_game_date = dateutil.parser.parse(sorted_matches[0]['utcDate']).astimezone(tz=None).replace(tzinfo=None)
-    logger.debug('Next game: %s, now: %s', next_game_date, now)
-    if next_game_date < now + datetime.timedelta(minutes=5):
-        logger.debug('Next game less than 5 minutes in the future or less than one hour in the past')
-        redownload = True
-
-    if not redownload:
-        in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
-        logger.debug('%s games currently in play', len(in_play))
-        if len(in_play) > 0:
+if not j['downloaded']:
+    matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
+    logger.debug('%s games in future or less than one hour in the past', len(matches))
+    redownload = False
+    if len(matches) > 0:
+        sorted_matches = sorted(matches, key=lambda m: m['utcDate'])
+        next_game_date = dateutil.parser.parse(sorted_matches[0]['utcDate']).astimezone(tz=None).replace(tzinfo=None)
+        logger.debug('Next game: %s, now: %s', next_game_date, now)
+        if next_game_date < now + datetime.timedelta(minutes=5):
+            logger.debug('Next game less than 5 minutes in the future or less than one hour in the past')
             redownload = True
 
-    if redownload:
-	    match_file = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
+        if not redownload:
+            in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
+            logger.debug('%s games currently in play', len(in_play))
+            if len(in_play) > 0:
+                redownload = True
+
+        if redownload:
+            match_file = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
 
 
 team_data = get_data(prefix='teams', url='http://api.football-data.org/v2/competitions/2018/teams', expiration=now - datetime.timedelta(hours=24))
