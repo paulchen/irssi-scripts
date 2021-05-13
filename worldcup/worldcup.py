@@ -25,7 +25,7 @@ if api_token is None:
     sys.exit(1)
 
 
-def get_data_file(prefix, url, expiration, force_download=False):
+def get_data(prefix, url, expiration, force_download=False):
     list_of_files = glob.glob(cache_dir + '/'  + prefix + '-*')
     download = force_download
 
@@ -42,8 +42,6 @@ def get_data_file(prefix, url, expiration, force_download=False):
         if file_date < one_hour_ago:
             logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
             download = True
-        else:
-            return data_file
         
     if download:
         logger.debug('Downloading data now')
@@ -69,16 +67,15 @@ def get_data_file(prefix, url, expiration, force_download=False):
     else:
         logger.debug('Not downloading anything')
 
-    return data_file
+    json_data = open(data_file).read()
+    return json.loads(json_data)
 
 
 now = datetime.datetime.now()
 one_hour_ago = now - datetime.timedelta(hours=1)
-match_file = get_data_file(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago)
+j = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago)
 
 # TODO avoid redownload
-json_data = open(match_file).read()
-j = json.loads(json_data)
 matches = [m for m in j['matches'] if dateutil.parser.parse(m['utcDate']).astimezone(tz=None).replace(tzinfo=None) > one_hour_ago]
 logger.debug('%s games in future or less than one hour in the past', len(matches))
 redownload = False
@@ -97,7 +94,8 @@ if len(matches) > 0:
             redownload = True
 
     if redownload:
-	    match_file = get_data_file(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
+	    match_file = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
+
 
 team_names = {
         'Russia': 'RUS',
@@ -190,11 +188,6 @@ def process_games(title, games):
 
     return title + ": " + "; ".join(map(format_game, games))
 
-
-logger.debug('Using data file %s', match_file)
-json_data = open(match_file).read()
-
-j = json.loads(json_data)
 
 sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
