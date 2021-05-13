@@ -97,40 +97,9 @@ if len(matches) > 0:
 	    match_file = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
 
 
-team_names = {
-        'Russia': 'RUS',
-        'Saudi Arabia': 'KSA',
-        'Egypt': 'EGY',
-        'Uruguay': 'URU',
-        'Morocco': 'MAR',
-        'Iran': 'IRN',
-        'Portugal': 'POR',
-        'Spain': 'ESP',
-        'France': 'FRA',
-        'Australia': 'AUS',
-        'Argentina': 'ARG',
-        'Iceland': 'ISL',
-        'Peru': 'PER',
-        'Denmark': 'DEN',
-        'Croatia': 'CRO',
-        'Nigeria': 'NGA',
-        'Costa Rica': 'CRC',
-        'Serbia': 'SRB',
-        'Germany': 'GER',
-        'Mexico': 'MEX',
-        'Brazil': 'BRA',
-        'Switzerland': 'SUI',
-        'Sweden': 'SWE',
-        'Korea Republic': 'KOR',
-        'Belgium': 'BEL',
-        'Panama': 'PAN',
-        'Tunisia': 'TUN',
-        'England': 'ENG',
-        'Colombia': 'COL',
-        'Japan': 'JPN',
-        'Poland': 'POL',
-        'Senegal': 'SEN'
-    }
+team_data = get_data(prefix='teams', url='http://api.football-data.org/v2/competitions/2018/teams', expiration=now - datetime.timedelta(hours=24))
+teams = dict((t['id'], t['tla']) for t in team_data['teams'])
+
 
 def format_date(date):
     return dateutil.parser.parse(date).astimezone(tz=None).strftime('%d.%m.%Y %H:%M')
@@ -167,8 +136,8 @@ def format_score(result):
 def format_team(team):
     if team == '':
         return '?'
-    if team['name'] in team_names:
-        return team_names[team['name']]
+    if team['id'] in teams:
+        return teams[team['id']]
     return team['name']
 
 
