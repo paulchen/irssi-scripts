@@ -447,16 +447,16 @@ sub fut {
 				}
 			}
 			elsif ($msg =~ m/^\s*!em\s*$/i ) {
-				my $difference = calculate_date_diff(2020, 6, 12, 21, 0, 0);
+				my $difference = calculate_date_diff(2021, 6, 11, 21, 0, 0);
 				if($difference =~ m/remaining/i ) {
 					$server->command("msg $channel $difference.");
 				}
-#				open my $file, '/home/ircbot/irssi-scripts/worldcup/status';
-#				while(my $line = <$file>) {
-#					$server->command("msg $channel $line");
-#				}
-#				close $file;
-#				$server->command("msg $channel Tippspiel: https://www.kicktipp.de/chatbox/");
+				open my $file, '/home/ircbot/irssi-scripts/worldcup/status';
+				while(my $line = <$file>) {
+					$server->command("msg $channel $line");
+				}
+				close $file;
+				$server->command("msg $channel Tippspiel: https://www.kicktipp.de/chatbox/");
 			}
 			elsif ($msg =~ m/^\s*!t\s*einhorn\s*$/i or $msg =~ m/^\s*!einhorn\s*$/i ) {
 				my ($seconds1, $minute1, $hour1, $day1, $month1, $year1, $dayOfWeek1, $dayOfYear1, $daylightSavings1) = localtime();
