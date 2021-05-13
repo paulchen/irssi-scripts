@@ -105,30 +105,29 @@ def format_date(date):
     return dateutil.parser.parse(date).astimezone(tz=None).strftime('%d.%m.%Y %H:%M')
 
 
-def add_results(result1, result2):
-    return str(result1['goalsHomeTeam'] + result2['goalsHomeTeam']) + ":" + str(result1['goalsAwayTeam'] + result2['goalsAwayTeam'])
-
 def simple_result(result):
-    return str(result['goalsHomeTeam']) + ":" + str(result['goalsAwayTeam'])
+    return str(result['homeTeam']) + ":" + str(result['awayTeam'])
+
+
+def goals_set(result):
+    return result['homeTeam'] is not None and result['awayTeam'] is not None
 
 
 def format_score(result):
-    return 'wtf'
-    if result['goalsHomeTeam'] == None or result['goalsAwayTeam'] == None:
+    if not goals_set(result['halfTime']):
         return None
 
-    if 'extraTime' in result:
-        #output = add_results(result['extraTime'], result) + " n.V."
+    if goals_set(result['extraTime']) in result:
         output = simple_result(result['extraTime']) + " n.V."
-        if simple_result(result) != '0:0':
+        if simple_result(result['fullTime']) != '0:0':
             output += " (" + simple_result(result) + ", " + simple_result(result['halfTime']) + ")"
     else:
-        output = simple_result(result)
-        if 'halfTime' in result and output != '0:0':
+        output = simple_result(result['fullTime'])
+        if output != '0:0':
             output += " (" + simple_result(result['halfTime']) + ")"
 
-    if 'penaltyShootout' in result:
-        output += ", " + simple_result(result['penaltyShootout']) + " i.E."
+    if goals_set(result['penalties']) in result:
+        output += ", " + simple_result(result['penalties']) + " i.E."
 
     return output
 
