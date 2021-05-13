@@ -25,50 +25,47 @@ if api_token is None:
     sys.exit(1)
 
 
+def parse_json(data_file):
+    json_data = open(data_file).read()
+    return json.loads(json_data)
+
+
 def get_data(prefix, url, expiration, force_download=False):
     list_of_files = glob.glob(cache_dir + '/'  + prefix + '-*')
-    download = force_download
 
-    # TODO simplify this
-    if len(list_of_files) == 0:
-        logger.debug('No cached files')
-        download = True
-    else:
+    if not force_download and len(list_of_files) > 0:
         data_file = max(list_of_files, key=os.path.getctime)
         logger.debug('Newest cached file: %s', data_file)
 
         file_date = datetime.datetime.fromtimestamp(os.path.getmtime(data_file))
 
-        if file_date < one_hour_ago:
-            logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
-            download = True
+        if file_date >= one_hour_ago:
+            logger.debug('Not downloading anything')
+            return parse_json(data_file)
+
+        logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
         
-    if download:
-        logger.debug('Downloading data now')
-        data_file = cache_dir + '/' + prefix + '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
+    logger.debug('Downloading data now')
+    data_file = cache_dir + '/' + prefix + '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
 
-        response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
+    response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
 
-        logger.debug('Request headers: %s', response.request.headers)
-        logger.debug('Response headers: %s', response.headers)
-        logger.debug('Status: %s', response.status_code)
+    logger.debug('Request headers: %s', response.request.headers)
+    logger.debug('Response headers: %s', response.headers)
+    logger.debug('Status: %s', response.status_code)
 
-        if response.status_code != 200:
-            logger.debug('Invalid status code')
-            sys.exit(1)
+    if response.status_code != 200:
+        logger.debug('Invalid status code')
+        sys.exit(1)
 
-        if response.headers['Content-Type'] != 'application/json;charset=UTF-8':
-            logger.debug('Invalid content type: %s', response.headers['Content-Type'])
-            sys.exit(1)
+    if response.headers['Content-Type'] != 'application/json;charset=UTF-8':
+        logger.debug('Invalid content type: %s', response.headers['Content-Type'])
+        sys.exit(1)
 
-        with open(data_file, 'w') as f:
-            f.write(response.text)
+    with open(data_file, 'w') as f:
+        f.write(response.text)
 
-    else:
-        logger.debug('Not downloading anything')
-
-    json_data = open(data_file).read()
-    return json.loads(json_data)
+    return parse_json(data_file)
 
 
 now = datetime.datetime.now()
