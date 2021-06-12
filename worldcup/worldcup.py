@@ -160,7 +160,7 @@ sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
 completed = [m for m in sorted_matches if m['status'] == 'FINISHED'][-3:]
 in_play = [m for m in sorted_matches if m['status'] == 'IN_PLAY' or m['status'] == 'PAUSED']
-future = [m for m in sorted_matches if m['status'] not in ('FINISHED', 'IN_PLAY')][:3]
+future = [m for m in sorted_matches if m['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED')][:3]
 
 output = []
 output += [process_games('Vergangene Spiele', completed)]
