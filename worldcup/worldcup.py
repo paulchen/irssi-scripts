@@ -128,7 +128,7 @@ def goals_set(result):
 
 
 def format_score(result):
-    if not goals_set(result['halfTime']):
+    if not goals_set(result['fullTime']):
         return None
 
     if goals_set(result['extraTime']) in result:
@@ -137,7 +137,7 @@ def format_score(result):
             output += " (" + simple_result(result) + ", " + simple_result(result['halfTime']) + ")"
     else:
         output = simple_result(result['fullTime'])
-        if output != '0:0':
+        if output != '0:0' and goals_set(result['halfTime']):
             output += " (" + simple_result(result['halfTime']) + ")"
 
     if goals_set(result['penalties']) in result:
