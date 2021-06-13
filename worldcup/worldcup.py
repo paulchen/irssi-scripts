@@ -192,7 +192,7 @@ list_of_files = sorted(glob.glob(cache_dir + '/matches-*'), reverse=True)[0:2]
 if len(list_of_files) == 2:
     for m in in_play:
         match_id = m['id']
-        teams = format_team(m['homeTeam']) + "-" + format_team(m['awayTeam'])
+        formatted_match = format_team(m['homeTeam']) + "-" + format_team(m['awayTeam'])
 
         goals1 = get_goals(list_of_files[1], m['id'])
         goals2 = get_goals(list_of_files[0], m['id'])
