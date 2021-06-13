@@ -207,7 +207,7 @@ if len(list_of_files) == 2:
                     goal_type = 'Eigentor'
                 else:
                     goal_type = 'Tor'
-                ircbot.write('%s: %s in Minute %s für %s durch %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name']))
+                ircbot.write('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
 
 logger.debug('Execution finished')
 
