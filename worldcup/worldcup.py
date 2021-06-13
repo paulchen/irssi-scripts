@@ -198,7 +198,9 @@ if len(list_of_files) == 2:
         goals1 = get_goals(list_of_files[1], m['id'])
         goals2 = get_goals(list_of_files[0], m['id'])
 
-        new_goals = [g for g in goals2 if g not in goals1]
+        old_goals_count = len(goals1)
+
+        new_goals = goals2[old_goals_count:]
         for g in new_goals:
             with open('/tmp/ircbot', 'a') as ircbot:
                 if g['type'] == 'OWN':
