@@ -157,11 +157,12 @@ def format_team(team):
 def format_game(game):
     date = format_date(game['utcDate'])
     teams = format_team(game['homeTeam']) + "-" + format_team(game['awayTeam'])
+    venue = '(' + game['venue'] + ')'
     result = format_score(game['score'])
     if result != None:
-        return date + ": " + teams + " " + result
+        return date + ": " + teams + " " + venue + " " + result
 
-    return date + ": " + teams
+    return date + ": " + teams + " " + venue
 
 
 def process_games(title, games):
