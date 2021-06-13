@@ -202,9 +202,10 @@ if len(list_of_files) == 2:
         for g in new_goals:
             with open('/tmp/ircbot', 'a') as ircbot:
                 if g['type'] == 'OWN':
-                    ircbot.write('%s: Own goal scored in minute %s for %s by %s' % (formatted_match, g['minute'], g['team']['name'], g['scorer']['name']))
+                    goal_type = 'Eigentor'
                 else:
-                    ircbot.write('%s: Goal scored in minute %s for %s by %s' % (formatted_match, g['minute'], g['team']['name'], g['scorer']['name']))
+                    goal_type = 'Tor'
+                ircbot.write('%s: %s in Minute %s für %s durch %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name']))
 
 logger.debug('Execution finished')
 
