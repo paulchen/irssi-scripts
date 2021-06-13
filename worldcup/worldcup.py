@@ -87,8 +87,8 @@ if not j['downloaded']:
             redownload = True
 
         if not redownload:
-            in_play = [m for m in j['matches'] if m['status'] == 'IN_PLAY']
-            logger.debug('%s games currently in play', len(in_play))
+            in_play = [m for m in j['matches'] if m['status'] in ('IN_PLAY', 'PAUSED')]
+            logger.debug('%s games currently in play or paused', len(in_play))
             if len(in_play) > 0:
                 redownload = True
 
@@ -159,7 +159,7 @@ def process_games(title, games):
 sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
 completed = [m for m in sorted_matches if m['status'] == 'FINISHED'][-3:]
-in_play = [m for m in sorted_matches if m['status'] == 'IN_PLAY' or m['status'] == 'PAUSED']
+in_play = [m for m in sorted_matches if m['status'] in ('IN_PLAY', 'PAUSED')]
 future = [m for m in sorted_matches if m['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED')][:3]
 
 output = []
