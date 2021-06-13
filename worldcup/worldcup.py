@@ -70,6 +70,21 @@ def get_data(prefix, url, expiration, force_download=False):
     return parse_json(data_file, True)
 
 
+def find_match(data, id):
+    for match in data['matches']:
+        if match['id'] == id:
+            return match
+    return None
+
+
+def get_goals(filename, match_id):
+    data = parse_json(filename)
+    match = find_match(data, match_id)
+    if not match or 'goals' not in match:
+        return []
+    return match['goals']
+
+
 now = datetime.datetime.now()
 one_hour_ago = now - datetime.timedelta(hours=1)
 j = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago)
@@ -172,6 +187,23 @@ logger.debug('Output: %s', output)
 for o in output:
     if o != []:
         print(o)
+
+list_of_files = sorted(glob.glob(cache_dir + '/matches-*'), reverse=True)[0:2]
+if len(list_of_files) == 2:
+    for m in in_play:
+        match_id = m['id']
+        teams = format_team(m['homeTeam']) + "-" + format_team(m['awayTeam'])
+
+        goals1 = get_goals(list_of_files[1], m['id'])
+        goals2 = get_goals(list_of_files[0], m['id'])
+
+        new_goals = [g for g in goals2 if g not in goals1]
+        for g in new_goals:
+            with open('/tmp/ircbot', 'a') as ircbot:
+                if g['type'] == 'OWN':
+                    ircbot.write('%s: Own goal scored in minute %s for %s by %s' % (formatted_match, g['minute'], g['team']['name'], g['scorer']['name']))
+                else:
+                    ircbot.write('%s: Goal scored in minute %s for %s by %s' % (formatted_match, g['minute'], g['team']['name'], g['scorer']['name']))
 
 logger.debug('Execution finished')
 
