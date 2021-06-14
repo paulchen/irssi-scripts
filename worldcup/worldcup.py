@@ -25,10 +25,14 @@ if api_token is None:
     sys.exit(1)
 
 
-def parse_json(data_file, downloaded=False):
+def parse_json(data_file, downloaded=False, file_date=None):
     json_data = open(data_file).read()
     j = json.loads(json_data)
     j['downloaded'] = downloaded
+    if file_date:
+        j['file_date'] = file_date
+    else:
+        j['file_date'] = datetime.datetime.now()
     return j
 
 
@@ -43,7 +47,7 @@ def get_data(prefix, url, expiration, force_download=False):
 
         if file_date >= one_hour_ago:
             logger.debug('Not downloading anything')
-            return parse_json(data_file)
+            return parse_json(data_file, file_date=file_date)
 
         logger.debug('File too old (%s), threshold %s', file_date, one_hour_ago)
         
@@ -64,6 +68,7 @@ def get_data(prefix, url, expiration, force_download=False):
         logger.debug('Invalid content type: %s', response.headers['Content-Type'])
         sys.exit(1)
 
+    logger.debug('Writing contents to %s', data_file)
     with open(data_file, 'w') as f:
         f.write(response.text)
 
@@ -77,8 +82,7 @@ def find_match(data, id):
     return None
 
 
-def get_goals(filename, match_id):
-    data = parse_json(filename)
+def get_goals(data, match_id):
     match = find_match(data, match_id)
     if not match or 'goals' not in match:
         return []
@@ -107,8 +111,17 @@ if not j['downloaded']:
             if len(in_play) > 0:
                 redownload = True
 
+        if not redownload:
+            sorted_matches = sorted(j['matches'], key=lambda m: m['lastUpdated'], reverse=True)
+            last_game_update = dateutil.parser.parse(sorted_matches[0]['lastUpdated']).astimezone(tz=None).replace(tzinfo=None) - datetime.timedelta(hours=2)
+            logger.debug('Last game update: %s, file time: %s', last_game_update, j['file_date'])
+            if j['file_date'] < last_game_update + datetime.timedelta(minutes=5):
+                logger.debug('Last game update less than 5 minutes before file time')
+                redownload = True
+
+
         if redownload:
-            match_file = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
+            j = get_data(prefix='matches', url='http://api.football-data.org/v2/competitions/2018/matches', expiration=one_hour_ago, force_download=True)
 
 
 team_data = get_data(prefix='teams', url='http://api.football-data.org/v2/competitions/2018/teams', expiration=now - datetime.timedelta(hours=24))
@@ -171,6 +184,11 @@ def process_games(title, games):
 
     return title + ": " + "; ".join(map(format_game, games))
 
+def notify(message):
+    logger.debug('Sending message to IRC: %s', message)
+    with open('/tmp/ircbot', 'a') as ircbot:
+        ircbot.write(message + "\n")
+
 
 sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
@@ -191,23 +209,44 @@ for o in output:
 
 list_of_files = sorted(glob.glob(cache_dir + '/matches-*'), reverse=True)[0:2]
 if len(list_of_files) == 2:
+    logger.debug('Using old file for comparison: %s', list_of_files[1])
+
+    old_data = parse_json(list_of_files[1])
+
+    for m in completed:
+        old_match = find_match(old_data, m['id'])
+        if old_match['status'] != 'FINISHED':
+            notify('Spiel %s zu Ende; Endstand: %s' % (format_team(m['homeTeam']) + "-" + format_team(m['awayTeam']), format_score(m['score'])))
+
+    started_games = []
     for m in in_play:
-        match_id = m['id']
         formatted_match = format_team(m['homeTeam']) + "-" + format_team(m['awayTeam'])
 
-        goals1 = get_goals(list_of_files[1], m['id'])
-        goals2 = get_goals(list_of_files[0], m['id'])
+        goals1 = get_goals(old_data, m['id'])
+        goals2 = get_goals(j, m['id'])
+
+        logger.debug('Analyzing match %s', formatted_match)
+        logger.debug('Goals in old match state: %s', goals1)
+        logger.debug('Goals in current match state: %s', goals2)
 
         old_goals_count = len(goals1)
 
         new_goals = goals2[old_goals_count:]
+        logger.debug('New goals: %s', new_goals)
         for g in new_goals:
-            with open('/tmp/ircbot', 'a') as ircbot:
-                if g['type'] == 'OWN':
-                    goal_type = 'Eigentor'
-                else:
-                    goal_type = 'Tor'
-                ircbot.write('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
+            if g['type'] == 'OWN':
+                goal_type = 'Eigentor'
+            else:
+                goal_type = 'Tor'
+            notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
+
+        old_match = find_match(old_data, m['id'])
+        logger.debug('Old match: %s', old_match)
+        if old_match['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED'):
+            started_games.append(formatted_match)
+
+    if len(started_games) > 0:
+        notify('Spielbeginn: %s' % (', '.join(started_games)))
 
 logger.debug('Execution finished')
 
