@@ -243,7 +243,8 @@ if len(list_of_files) == 2:
         old_match = find_match(old_data, m['id'])
         logger.debug('Old match: %s', old_match)
         if old_match['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED'):
-            started_games.append(formatted_match)
+            started_game = '%s (%s)' % (formatted_match, m['venue'])
+            started_games.append(started_game)
 
     if len(started_games) > 0:
         notify('Spielbeginn: %s' % (', '.join(started_games)))
