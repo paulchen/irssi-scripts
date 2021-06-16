@@ -238,7 +238,11 @@ if len(list_of_files) == 2:
                 goal_type = 'Eigentor'
             else:
                 goal_type = 'Tor'
-            notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, g['minute'], format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
+            if extraTime in g and g['extraTime']:
+                minute = '%s+%s' % (g['minute'], g['extraTime'])
+            else:
+                minute = g['minute']
+            notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, minute, format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
 
         old_match = find_match(old_data, m['id'])
         logger.debug('Old match: %s', old_match)
