@@ -82,11 +82,17 @@ def find_match(data, id):
     return None
 
 
+def remove_assist(goals):
+    for goal in goals:
+        goal['assist'] = None
+    return goals
+
+
 def get_goals(data, match_id):
     match = find_match(data, match_id)
     if not match or 'goals' not in match:
         return []
-    return match['goals']
+    return remove_assist(match['goals'])
 
 
 now = datetime.datetime.now()
@@ -229,11 +235,25 @@ if len(list_of_files) == 2:
         logger.debug('Goals in old match state: %s', goals1)
         logger.debug('Goals in current match state: %s', goals2)
 
+        old_match = find_match(old_data, m['id'])
+        logger.debug('Old match: %s', old_match)
+
+        logger.debug('Old match score: %s', old_match['score'])
+        logger.debug('New match score: %s', m['score'])
+
+        if old_match['score'] == m['score']:
+            logger.debug('Old and new match score are equal, not searching for new goals')
+            continue
+
         old_goals_count = len(goals1)
 
         new_goals = goals2[old_goals_count:]
         logger.debug('New goals: %s', new_goals)
         for g in new_goals:
+            if g in goals1:
+                logger.debug('New goal already exists in old match state, ignoring')
+                continue
+
             if g['type'] == 'OWN':
                 goal_type = 'Eigentor'
             else:
@@ -244,8 +264,6 @@ if len(list_of_files) == 2:
                 minute = g['minute']
             notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, minute, format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
 
-        old_match = find_match(old_data, m['id'])
-        logger.debug('Old match: %s', old_match)
         if old_match['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED'):
             started_game = '%s (%s)' % (formatted_match, m['venue'])
             started_games.append(started_game)
