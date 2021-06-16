@@ -258,7 +258,7 @@ if len(list_of_files) == 2:
                 goal_type = 'Eigentor'
             else:
                 goal_type = 'Tor'
-            if extraTime in g and g['extraTime']:
+            if 'extraTime' in g and g['extraTime']:
                 minute = '%s+%s' % (g['minute'], g['extraTime'])
             else:
                 minute = g['minute']
