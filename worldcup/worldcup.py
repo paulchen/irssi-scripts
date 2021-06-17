@@ -241,9 +241,9 @@ if len(list_of_files) == 2:
         logger.debug('Old match score: %s', old_match['score'])
         logger.debug('New match score: %s', m['score'])
 
-        if old_match['score'] == m['score']:
-            logger.debug('Old and new match score are equal, not searching for new goals')
-            continue
+#        if old_match['score'] == m['score']:
+#            logger.debug('Old and new match score are equal, not searching for new goals')
+#            continue
 
         old_goals_count = len(goals1)
 
@@ -256,6 +256,8 @@ if len(list_of_files) == 2:
 
             if g['type'] == 'OWN':
                 goal_type = 'Eigentor'
+            elif g['type'] == 'PENALTY':
+                goal_type = 'Elfmetertreffer'
             else:
                 goal_type = 'Tor'
             if 'extraTime' in g and g['extraTime']:
