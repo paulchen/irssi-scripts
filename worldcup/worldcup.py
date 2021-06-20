@@ -222,7 +222,7 @@ if len(list_of_files) == 2:
     for m in completed:
         old_match = find_match(old_data, m['id'])
         if old_match['status'] != 'FINISHED':
-            notify('Spiel %s zu Ende; Endstand: %s' % (format_team(m['homeTeam']) + "-" + format_team(m['awayTeam']), format_score(m['score'])))
+            notify('Abpfiff für %s; Endstand: %s' % (format_team(m['homeTeam']) + "-" + format_team(m['awayTeam']), format_score(m['score'])))
 
     started_games = []
     for m in in_play:
@@ -271,7 +271,7 @@ if len(list_of_files) == 2:
             started_games.append(started_game)
 
     if len(started_games) > 0:
-        notify('Spielbeginn: %s' % (', '.join(started_games)))
+        notify('Anpfiff: %s' % (', '.join(started_games)))
 
 logger.debug('Execution finished')
 
