@@ -4,6 +4,9 @@
 
 import json, dateutil.parser, os, glob, requests, datetime, pytz, tzlocal, logging, sys
 
+# from https://stackoverflow.com/a/51389105
+from iteration_utilities import unique_everseen
+
 path = os.path.dirname(os.path.abspath(__file__))
 cache_dir = path + '/cache'
 logfile = path + '/log/worldcup.log'
@@ -92,7 +95,7 @@ def get_goals(data, match_id):
     match = find_match(data, match_id)
     if not match or 'goals' not in match:
         return []
-    return remove_assist(match['goals'])
+    return list(unique_everseen(remove_assist(match['goals'])))
 
 
 now = datetime.datetime.now()
