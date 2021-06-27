@@ -211,6 +211,10 @@ def notify(message):
         ircbot.write(message + "\n")
 
 
+def notify_penalty(team, score):
+    notify('Treffer im Elfmeterschießen für %s; Zwischenstand: %s i.E.' % (format_team(team), simple_result(score['penalties'])))
+
+
 sorted_matches = sorted(j['matches'], key=lambda m: m['utcDate'])
 
 completed = [m for m in sorted_matches if m['status'] == 'FINISHED'][-3:]
@@ -280,6 +284,19 @@ if len(list_of_files) == 2:
             else:
                 minute = g['minute']
             notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, minute, format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
+
+        if goals_set(m['score']['penalties']):
+            penalties_away = m['score']['penalties']['awayTeam']
+            penalties_home = m['score']['penalties']['homeTeam']
+            if goals_set(old_match['score']['penalties']):
+                penalties_away = penalties_away - old_match['score']['penalties']['awayTeam']
+                penalties_home = penalties_home - old_match['score']['penalties']['homeTeam']
+
+            if penalties_away > 0:
+                notify_penalty(m['awayTeam'], m['score'])
+
+            if penalties_home > 0:
+                notify_penalty(m['homeTeam'], m['score'])
 
         if old_match['status'] not in ('FINISHED', 'IN_PLAY', 'PAUSED'):
             started_game = '%s (%s)' % (formatted_match, m['venue'])
