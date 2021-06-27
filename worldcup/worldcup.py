@@ -163,12 +163,7 @@ def format_score(result):
         output = simple_result(result['fullTime']) + " n.V."
         if simple_result(result['fullTime']) != '0:0':
             regular_time_result = subtract_results(result['fullTime'], result['extraTime'])
-            formatted_regular_time = simple_result(regular_time_result)
-            formatted_half_time = simple_result(result['halfTime'])
-            if formatted_regular_time != formatted_half_time:
-                output += " (" + simple_result(regular_time_result) + ", " + simple_result(result['halfTime']) + ")"
-            else:
-                output += " (" + simple_result(regular_time_result) + ")"
+            output += " (" + simple_result(regular_time_result) + ", " + simple_result(result['halfTime']) + ")"
     else:
         output = simple_result(result['fullTime'])
         if output != '0:0' and goals_set(result['halfTime']):
