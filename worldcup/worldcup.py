@@ -286,9 +286,11 @@ if len(list_of_files) == 2:
             notify('%s: %s in Minute %s für %s durch %s; aktueller Spielstand: %s' % (formatted_match, goal_type, minute, format_team(g['team']), g['scorer']['name'], format_score(m['score'])))
 
         if goals_set(m['score']['penalties']):
+            logger.debug('Penalties in current match state: %s', m['score']['penalties'])
             penalties_away = m['score']['penalties']['awayTeam']
             penalties_home = m['score']['penalties']['homeTeam']
             if goals_set(old_match['score']['penalties']):
+                logger.debug('Penalties in old match state: %s', old_match['score']['penalties'])
                 penalties_away = penalties_away - old_match['score']['penalties']['awayTeam']
                 penalties_home = penalties_home - old_match['score']['penalties']['homeTeam']
 
