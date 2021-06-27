@@ -149,14 +149,26 @@ def goals_set(result):
     return result['homeTeam'] is not None and result['awayTeam'] is not None
 
 
+def subtract_results(result1, result2):
+    home_team = result1['homeTeam'] - result2['homeTeam']
+    away_team = result1['awayTeam'] - result2['awayTeam']
+    return {'homeTeam': home_team, 'awayTeam': away_team}
+
+
 def format_score(result):
     if not goals_set(result['fullTime']):
         return None
 
-    if goals_set(result['extraTime']) in result:
-        output = simple_result(result['extraTime']) + " n.V."
+    if goals_set(result['extraTime']):
+        output = simple_result(result['fullTime']) + " n.V."
         if simple_result(result['fullTime']) != '0:0':
-            output += " (" + simple_result(result) + ", " + simple_result(result['halfTime']) + ")"
+            regular_time_result = subtract_results(result['fullTime'], result['extraTime'])
+            formatted_regular_time = simple_result(regular_time_result)
+            formatted_half_time = simple_result(result['halfTime'])
+            if formatted_regular_time != formatted_half_time:
+                output += " (" + simple_result(regular_time_result) + ", " + simple_result(result['halfTime']) + ")"
+            else:
+                output += " (" + simple_result(regular_time_result) + ")"
     else:
         output = simple_result(result['fullTime'])
         if output != '0:0' and goals_set(result['halfTime']):
