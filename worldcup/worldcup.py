@@ -178,7 +178,7 @@ def format_score(result):
 
 
 def format_team(team):
-    if team == '':
+    if team['id'] is None:
         return '?'
     if team['id'] in teams:
         return teams[team['id']]
