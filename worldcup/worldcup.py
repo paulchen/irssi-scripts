@@ -159,19 +159,23 @@ def format_score(result):
     if not goals_set(result['fullTime']):
         return None
 
+    regular_time_result = result['fullTime']
+    if goals_set(result['penalties']):
+        regular_time_result = subtract_results(regular_time_result, result['penalties'])
+
     if goals_set(result['extraTime']):
-        output = simple_result(result['fullTime']) + " n.V."
-        regular_time_result = subtract_results(result['fullTime'], result['extraTime'])
+        output = simple_result(regular_time_result) + " n.V."
+        regular_time_result = subtract_results(regular_time_result, result['extraTime'])
         if simple_result(regular_time_result) == '0:0':
             output += " (0:0)"
         else:
             output += " (" + simple_result(regular_time_result) + ", " + simple_result(result['halfTime']) + ")"
     else:
-        output = simple_result(result['fullTime'])
+        output = simple_result(regular_time_result)
         if output != '0:0' and goals_set(result['halfTime']):
             output += " (" + simple_result(result['halfTime']) + ")"
 
-    if goals_set(result['penalties']) in result:
+    if goals_set(result['penalties']):
         output += ", " + simple_result(result['penalties']) + " i.E."
 
     return output
