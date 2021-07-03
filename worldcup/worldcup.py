@@ -3,6 +3,7 @@
 # vim:ts=4:sw=4:expandtab
 
 import json, dateutil.parser, os, glob, requests, datetime, pytz, tzlocal, logging, sys
+from pathlib import Path
 
 # from https://stackoverflow.com/a/51389105
 from iteration_utilities import unique_everseen
@@ -20,8 +21,12 @@ logger.setLevel(logging.DEBUG)
 logger.debug('Execution started')
 
 api_token = None
+rocketchat_endpoint = None
 with open(path + '/api-token', 'r') as tokenfile:
     api_token = tokenfile.read()
+if Path(path + '/rocketchat-endpoint').exists():
+    with open(path + '/rocketchat-endpoint', 'r') as rocketchat_file:
+        rocketchat_endpoint = rocketchat_file.read()
 
 if api_token is None:
     logger.error('API token cannot be read from file "api-token"')
@@ -210,6 +215,11 @@ def notify(message):
     logger.debug('Sending message to IRC: %s', message)
     with open('/tmp/ircbot', 'a') as ircbot:
         ircbot.write(message + "\n")
+    j = { 'text': message }
+    requests.post(
+            url=rocketchat_endpoint.strip(),
+            data=json.dumps(j),
+            headers={'Content-Type': 'application/json'})
 
 
 def notify_penalty(team, score):
