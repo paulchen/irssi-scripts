@@ -142,7 +142,7 @@ def format_date(date):
 
 
 def simple_result(result):
-    return str(result['homeTeam']) + ":" + str(result['awayTeam'])
+    return str(result['homeTeam']) + "\ufeff:\ufeff" + str(result['awayTeam'])
 
 
 def goals_set(result):
