@@ -57,7 +57,7 @@ def get_data(prefix, url, expiration, force_download=False):
     logger.debug('Downloading data now')
     data_file = cache_dir + '/' + prefix + '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.json'
 
-    response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()})
+    response = requests.get(url=url, headers={'X-Auth-Token': api_token.strip()}, timeout=10)
 
     logger.debug('Request headers: %s', response.request.headers)
     logger.debug('Response headers: %s', response.headers)
